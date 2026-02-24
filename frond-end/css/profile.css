@@ -1,0 +1,172 @@
+.user-info{
+    margin: 24px 0 0 0 ;
+    padding-left: 18px;
+    border-left: 3px solid #4a6fa5;
+    min-height: 55px;
+}
+
+.user-info h4{
+    font-size: 1.09rem;
+    font-weight: bold;
+    margin: 0 0 3px 0;
+    color: #fff;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 8px #001b3524, 0 1px 0 #001b3530;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.user-info p{
+    margin: 0;
+    font-size: 0.93rem;
+    color: #a4d4ff;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 0 #001b3530;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+/* estos estilos son para  */
+.user-avatar{
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(135deg, #4a6fa5 75%, #003155 100%);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700px;
+    font-size: 1.32rem;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 8px #001b353a;
+    margin-right: 13px;
+    margin-left: 8px;
+    margin-top: 16px;
+    user-select: none;
+    text-transform: uppercase;
+}
+
+
+/* CIERRE SESION */
+
+.logout-btn {
+    margin-top: 12px;
+    background: #ee4646;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 18px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+    font-size: 1rem;
+}
+
+.logout-btn:hover {
+    background: #c93030;
+}
+
+
+/* otros estilos de admin */
+/* Estilos específicos para la página de administrador */
+.content-section {
+  margin-bottom: 50px;
+  padding-top: 20px;
+}
+
+.upload-container {
+  background-color: var(--card-bg, #f9f9f9);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.upload-area {
+  border: 2px dashed var(--border-color, #bdbdbd);
+  border-radius: 5px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.upload-area:hover {
+  border-color: var(--primary-color, #0056a4);
+  background-color: rgba(74, 111, 165, 0.05);
+}
+
+.stats-card {
+  display: inline-block;
+  margin: 10px;
+  min-width: 220px;
+  vertical-align: top;
+}
+
+.upload-icon {
+  font-size: 48px;
+  color: var(--primary-color, #0056a4);
+  margin-bottom: 15px;
+}
+
+.upload-button-container {
+  margin-top: 20px;
+}
+
+#previewEtiqueta .card {
+  padding: 30px;
+}
+
+#previewEtiqueta textarea {
+  width: 100%;
+}
+
+#previewEtiqueta input[type="text"] {
+  width: 100%;
+}
+
+#previewEtiqueta label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+#previewImprimir {
+  margin-top: 30px;
+  display: none;
+}
+
+/* Estilos para la vista previa de impresión */
+.print-label {
+  border: 2px solid #b30000;
+  padding: 18px 30px;
+  max-width: 440px;
+  font-family: sans-serif;
+}
+
+.print-label h2 {
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.print-label .cas-number {
+  float: right;
+  font-weight: bold;
+}
+
+.print-label .warning {
+  color: #b30000;
+  font-weight: bold;
+}
+
+.print-label .pictograms {
+  margin: 14px 0;
+  text-align: center;
+}
+
+.print-label .pictograms img {
+  height: 60px;
+  margin: 4px;
+}

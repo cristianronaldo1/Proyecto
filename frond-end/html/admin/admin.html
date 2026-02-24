@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eticol - Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../../css/styles.css" />
+  <link rel="stylesheet" href="../../css/profile.css" />
+  <link rel="stylesheet" href="../../css/profile.css" />
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>
+        <i class="fas fa-flask"></i>
+        <a href="../../index.html" class="letter"><span id="logoutLogo">Eticol</span></a>
+      </h2>
+    </div>
+    <div class="sidebar-menu">
+      <div class="menu-category">
+        <h3>ACCIONES</h3>
+        <a href="#dashboard" class="menu-item active">
+          <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
+        </a>
+        <a href="#cargar-sds" class="menu-item">
+          <i class="fas fa-file-upload"></i> <span>Cargar SDS</span>
+        </a>
+      </div>
+      <div class="menu-category">
+        <h3>Consultas</h3>
+        <a href="#etiquetas" class="menu-item">
+          <i class="fas fa-search"></i> <span>Etiquetas creadas</span>
+        </a>
+      </div>
+    </div>
+    <div class="user-info">
+      <div id="userAvatar" class="user-avatar"></div>
+      <h4 id="nombreUsuario">Cargando...</h4>
+      <p id="rolUsuario"></p>
+      <button id="logoutBtn" class="logout-btn">Cerrar sesión</button>
+    </div>
+  </div>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <h1>Panel de Administrador</h1>
+      <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle">
+          <i class="fas fa-moon"></i>
+        </button>
+        <div class="mobile-menu-toggle" id="mobileMenuToggle">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sección Dashboard -->
+    <section id="dashboard" class="content-section">
+      <div class="dashboard">
+        <div class="card stats-card">
+          <div class="card-header">
+            <h3>Etiquetas Generadas</h3>
+            <i class="fas fa-tag"></i>
+          </div>
+          <div class="card-body">
+            <div class="stat-value">1,248</div>
+            <div class="stat-label">+12% este mes</div>
+          </div>
+        </div>
+        <div class="card stats-card">
+          <div class="card-header">
+            <h3>SDS Registradas</h3>
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <div class="card-body">
+            <div class="stat-value">568</div>
+            <div class="stat-label">+8% este mes</div>
+          </div>
+        </div>
+        <div class="card stats-card">
+          <div class="card-header">
+            <h3>Productos</h3>
+            <i class="fas fa-prescription-bottle"></i>
+          </div>
+          <div class="card-body">
+            <div class="stat-value">342</div>
+            <div class="stat-label">+15 este mes</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Sección para cargar SDS -->
+    <section id="cargar-sds" class="content-section">
+      <h2 class="section-title">
+        <i class="fas fa-file-upload"></i> Cargar SDS
+      </h2>
+      <div class="upload-container">
+        <div class="upload-area" id="drop-area">
+          <i class="fas fa-cloud-upload-alt upload-icon"></i>
+          <h3>Arrastra y suelta tu archivo SDS aquí</h3>
+          <p>o haz clic para seleccionar un archivo PDF</p>
+          <input type="file" accept=".pdf" id="pdfInput" style="display: none" />
+        </div>
+        <div class="upload-button-container">
+          <button class="btn btn-primary" id="btnUpload" type="button">
+            <i class="fas fa-upload"></i> Subir SDS
+          </button>
+        </div>
+      </div>
+      <div id="previewEtiqueta"></div>
+    </section>
+    
+    <!-- Sección de etiquetas creadas -->
+    <section id="etiquetas" class="content-section">
+      <h2 class="section-title">
+        <i class="fas fa-tags"></i> Etiquetas creadas
+      </h2>
+      <div class="table-container">
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Código</th>
+              <th>Fecha creación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ETANOL 70%</td>
+              <td>CHEM-ET-70</td>
+              <td>10/06/2023</td>
+              <td>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-eye"></i> Ver
+                </button>
+                <button class="btn btn-outline btn-sm">
+                  <i class="fas fa-download"></i> Descargar
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>Ácido Clorhídrico</td>
+              <td>CHEM-AC-37</td>
+              <td>09/06/2023</td>
+              <td>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-eye"></i> Ver
+                </button>
+                <button class="btn btn-outline btn-sm">
+                  <i class="fas fa-download"></i> Descargar
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>Hipoclorito de Sodio</td>
+              <td>CHEM-HS-15</td>
+              <td>08/06/2023</td>
+              <td>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fas fa-eye"></i> Ver
+                </button>
+                <button class="btn btn-outline btn-sm">
+                  <i class="fas fa-download"></i> Descargar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="../../js/script.js"></script>
+  <script src="../../js/etiquetas.js"></script>
+</body>
+</html>
