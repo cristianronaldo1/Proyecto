@@ -436,85 +436,69 @@ async def extract_pdf_data(file: UploadFile = File(...)):
                     if len(nombre) > 5:
                         break
 
-            # 2. Indicaciones de peligro - Versión mejorada
+            # 2. Indicaciones de peligro (H)
             indicaciones = []
-            
-            # Patrones mejorados para frases H (Hxxx)
-            frases_h = re.finditer(
-                r'(?:H| ?:Indicaci[Ó]n |FRASE H|Peligro H|H frase|indicaciones de peligro| Indicaciones de peligro|H\-|\bH\s)\s*[-]?\s*(\d{2,4}[a-zA-Z]?)\b[:\-\s]*(.*?)(?=\n\s*(?:H|P|\d|$))',
-                texto, re.IGNORECASE | re.DOTALL
-            )
-            
-            for match in frases_h:
-                codigo = match.group(1).strip()
-                descripcion = (match.group(2) or "").strip()
+
+            # Caso 1: Hxxx + descripción en la misma línea
+            for codigo, descripcion in re.findall(
+                r'\bH\s*[-:]?\s*(\d{3,4}[A-Za-z]?)\b\s*[:\-]?\s*([^\n]+)',
+                texto,
+                re.IGNORECASE,
+            ):
+                descripcion = descripcion.strip(" .;:-")
                 if descripcion:
-                    indicaciones.append(f"H{codigo}: {descripcion}")
+                    indicaciones.append(f"H{codigo.upper()}: {descripcion}")
                 else:
-                    indicaciones.append(f"H{codigo}")
-            
-            # Si no encontramos frases H con formato, buscamos sección completa
+                    indicaciones.append(f"H{codigo.upper()}")
+
+            # Caso 2: encabezado de sección + líneas con Hxxx
             if not indicaciones:
                 seccion_peligro = re.search(
-                    r'(?i)(?:2\s*\.\s*IDENTIFICACI[ÓO]N\s*DE\s*LOS\s*PELIGROS|indicaciones de peligro| Indicaciones de peligro| indicaci[ÓO]n de peligro|frases h|riesgos específicos|hazard identification)(.*?)(?=\n\d+\.\s|\n\s*[A-Z]{3,}|$)',
-                    texto, re.DOTALL
+                    r'(?is)(?:2\s*\.\s*IDENTIFICACI[ÓO]N\s*DE\s*LOS\s*PELIGROS|indicaci[ÓO]n(?:es)?\s+de\s+peligro|frases\s*h|hazard\s+identification)(.*?)(?=\n\s*\d+\s*\.|\Z)',
+                    texto,
                 )
-                
-                if seccion_peligro:
-                    # Buscar frases en formato de lista
-                    frases = re.findall(
-                        r'(?:•|\*|\d+\.|[-])\s*(H\d+\s*[:-]?\s*.*?|.*?Peligro\s*H\d+.*?)(?=\n\s*(?:•|\*|\d+\.|-|$))',
-                        seccion_peligro.group(1), re.DOTALL
-                    )
-                    
-                    if not frases:
-                        # Alternativa: buscar líneas que comienzan con H
-                        frases = re.findall(
-                            r'^\s*(H\d+\s*[:-]?\s*.*?)$',
-                            seccion_peligro.group(1), re.MULTILINE
-                        )
-                    
-                    indicaciones = [f.strip() for f in frases if f.strip() and len(f.strip()) > 5]
 
-            # 3. Consejos de prudencia - Versión mejorada
+                if seccion_peligro:
+                    for linea in seccion_peligro.group(1).splitlines():
+                        match_h = re.search(r'\b(H\s*\d{3,4}[A-Za-z]?)\b\s*[:\-]?\s*(.*)', linea, re.IGNORECASE)
+                        if match_h:
+                            codigo = re.sub(r'\s+', '', match_h.group(1).upper())
+                            descripcion = match_h.group(2).strip(" .;:-")
+                            indicaciones.append(f"{codigo}: {descripcion}" if descripcion else codigo)
+
+            # 3. Consejos de prudencia (P)
             consejos = []
-            
-            # Patrones mejorados para frases P (Pxxx)
-            frases_p = re.finditer(
-                r'(?:P|FRASE P|Prudencia P|consejos de prudencia| Consejos de prudencia|P frase|P\-|\bP\s)\s*[-]?\s*(\d{2,4}[a-zA-Z]?)\b[:\-\s]*(.*?)(?=\n\s*(?:H|P|\d|$))',
-                texto, re.IGNORECASE | re.DOTALL
-            )
-            
-            for match in frases_p:
-                codigo = match.group(1).strip()
-                descripcion = (match.group(2) or "").strip()
+
+            # Caso 1: Pxxx + descripción en la misma línea
+            for codigo, descripcion in re.findall(
+                r'\bP\s*[-:]?\s*(\d{3,4}[A-Za-z]?)\b\s*[:\-]?\s*([^\n]+)',
+                texto,
+                re.IGNORECASE,
+            ):
+                descripcion = descripcion.strip(" .;:-")
                 if descripcion:
-                    consejos.append(f"P{codigo}: {descripcion}")
+                    consejos.append(f"P{codigo.upper()}: {descripcion}")
                 else:
-                    consejos.append(f"P{codigo}")
-            
-            # Si no encontramos frases P con formato, buscamos sección completa
+                    consejos.append(f"P{codigo.upper()}")
+
+            # Caso 2: encabezado de sección + líneas con Pxxx
             if not consejos:
                 seccion_prudencia = re.search(
-                    r'(?i)(?:4\s*\.\s*MEDIDAS\s*DE\s*PRIMEROS\s*AUXILIOS|Consejos de prudencia|frases p|medidas de seguridad|precautionary statements)(.*?)(?=\n\d+\.\s|\n\s*[A-Z]{3,}|$)',
-                    texto, re.DOTALL
+                    r'(?is)(?:consejos\s+de\s+prudencia|frases\s*p|precautionary\s+statements)(.*?)(?=\n\s*\d+\s*\.|\Z)',
+                    texto,
                 )
-                
+
                 if seccion_prudencia:
-                    # Buscar frases en formato de lista
-                    frases = re.findall(
-                        r'(?:•|\*|\d+\.|[-])\s*(P\d+\s*[:-]?\s*.*?|.*?Prudencia\s*P\d+.*?)(?=\n\s*(?:•|\*|\d+\.|-|$))',
-                        seccion_prudencia.group(1), re.DOTALL
-                    )
-                    
-                    if not frases:
-                        # Alternativa: buscar líneas que comienzan con P
-                        frases = re.findall(
-                            r'^\s*(P\d+\s*[:-]?\s*.*?)$',
-                            seccion_prudencia.group(1), re.MULTILINE
-                        )
-                    
-                    consejos = [f.strip() for f in frases if f.strip() and len(f.strip()) > 5]
+                    for linea in seccion_prudencia.group(1).splitlines():
+                        match_p = re.search(r'\b(P\s*\d{3,4}[A-Za-z]?)\b\s*[:\-]?\s*(.*)', linea, re.IGNORECASE)
+                        if match_p:
+                            codigo = re.sub(r'\s+', '', match_p.group(1).upper())
+                            descripcion = match_p.group(2).strip(" .;:-")
+                            consejos.append(f"{codigo}: {descripcion}" if descripcion else codigo)
+
+            # Eliminar duplicados manteniendo orden
+            indicaciones = list(dict.fromkeys(indicaciones))
+            consejos = list(dict.fromkeys(consejos))
 
             # Resto del código se mantiene igual (emergencia, pictogramas, etc.)
             emergencia = re.findall(
