@@ -2,14 +2,16 @@ from fastapi import FastAPI
 from fastapi import Request
 from fastapi import File, UploadFile
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, UploadFile, File, HTTPException #deep
+from fastapi.responses import Response
 import mysql.connector
 import pdfplumber
 import os
 import re
+import json
 import tempfile #deep
 
 app = FastAPI()
@@ -77,9 +79,63 @@ class Etiqueta(BaseModel):
     inf_cas: str
     fecha: str
     id_producto: str
-    frases_h: List[int]
-    frases_p: List[int]
-    pictogramas: List[int]
+    frases_h: List[str]
+    frases_p: List[str]
+    pictogramas: List[str]
+    id_sds: Optional[int] = None
+
+class EtiquetaGuardada(BaseModel):
+    nombre_producto: str
+    indicaciones_peligro: List[str]
+    consejos_prudencia: List[str]
+    informacion_emergencia: List[str]
+    pictogramas: List[str]
+    palabra_advertencia: str
+    cas: str
+    id_sds: Optional[int] = None
+
+
+@app.on_event("startup")
+def ensure_extra_tables():
+    db = get_connection()
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sds_archivos (
+                id_sds INT AUTO_INCREMENT PRIMARY KEY,
+                nombre_archivo VARCHAR(255) NOT NULL,
+                tipo_mime VARCHAR(100),
+                contenido LONGBLOB NOT NULL,
+                datos_extraidos JSON,
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS etiquetas_guardadas (
+                id_guardado INT AUTO_INCREMENT PRIMARY KEY,
+                nombre_producto VARCHAR(255) NOT NULL,
+                palabra_advertencia VARCHAR(100),
+                cas VARCHAR(100),
+                indicaciones_peligro TEXT,
+                consejos_prudencia TEXT,
+                informacion_emergencia TEXT,
+                pictogramas TEXT,
+                html_etiqueta LONGTEXT,
+                id_sds INT NULL,
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_etiquetas_guardadas_sds
+                  FOREIGN KEY (id_sds) REFERENCES sds_archivos(id_sds)
+                  ON DELETE SET NULL
+            )
+            """
+        )
+        db.commit()
+    finally:
+        cursor.close()
+        db.close()
 
 class FraseH(BaseModel):
     descripcion: str
@@ -340,6 +396,153 @@ def registrar_etiqueta(data: Etiqueta):
         db.close()
 
 
+@app.post("/etiquetas/guardar")
+def guardar_etiqueta(data: EtiquetaGuardada):
+    try:
+        db = get_connection()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            """
+            INSERT INTO etiquetas_guardadas (
+                nombre_producto,
+                palabra_advertencia,
+                cas,
+                indicaciones_peligro,
+                consejos_prudencia,
+                informacion_emergencia,
+                pictogramas,
+                html_etiqueta,
+                id_sds
+            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """,
+            (
+                data.nombre_producto,
+                data.palabra_advertencia,
+                data.cas,
+                "\n".join(data.indicaciones_peligro),
+                "\n".join(data.consejos_prudencia),
+                "\n".join(data.informacion_emergencia),
+                json.dumps(data.pictogramas, ensure_ascii=False),
+                "",
+                data.id_sds,
+            ),
+        )
+        db.commit()
+        return {"mensaje": "Etiqueta guardada", "id_guardado": cursor.lastrowid}
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        cursor.close()
+        db.close()
+
+
+@app.get("/etiquetas/guardadas")
+def listar_etiquetas_guardadas():
+    try:
+        db = get_connection()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            """
+            SELECT id_guardado, nombre_producto, palabra_advertencia, cas, indicaciones_peligro,
+                   consejos_prudencia, informacion_emergencia, pictogramas, id_sds, fecha_registro
+            FROM etiquetas_guardadas
+            ORDER BY fecha_registro DESC
+            """
+        )
+        filas = cursor.fetchall()
+        for fila in filas:
+            fila["pictogramas"] = json.loads(fila["pictogramas"] or "[]")
+        return {"etiquetas": filas, "total_guardadas": len(filas)}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        cursor.close()
+        db.close()
+
+
+@app.get("/etiquetas/contador")
+def contador_etiquetas_guardadas():
+    try:
+        db = get_connection()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT COUNT(*) AS total FROM etiquetas_guardadas")
+        total = cursor.fetchone()["total"]
+        return {"total_guardadas": total}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        cursor.close()
+        db.close()
+
+
+@app.get("/sds")
+def listar_sds_archivos():
+    try:
+        db = get_connection()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            """
+            SELECT id_sds, nombre_archivo, tipo_mime, fecha_registro
+            FROM sds_archivos
+            ORDER BY fecha_registro DESC
+            """
+        )
+        filas = cursor.fetchall()
+        return {"sds": filas, "total_sds": len(filas)}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        cursor.close()
+        db.close()
+
+
+@app.get("/sds/{id_sds}/download")
+def descargar_sds(id_sds: int):
+    try:
+        db = get_connection()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT nombre_archivo, tipo_mime, contenido FROM sds_archivos WHERE id_sds = %s",
+            (id_sds,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="SDS no encontrada")
+        headers = {"Content-Disposition": f'attachment; filename="{row["nombre_archivo"]}"'}
+        return Response(content=row["contenido"], media_type=row["tipo_mime"] or "application/pdf", headers=headers)
+    except HTTPException:
+        raise
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        cursor.close()
+        db.close()
+
+
+@app.get("/sds/{id_sds}/view")
+def ver_sds(id_sds: int):
+    try:
+        db = get_connection()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT nombre_archivo, tipo_mime, contenido FROM sds_archivos WHERE id_sds = %s",
+            (id_sds,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="SDS no encontrada")
+        headers = {"Content-Disposition": f'inline; filename="{row["nombre_archivo"]}"'}
+        return Response(content=row["contenido"], media_type=row["tipo_mime"] or "application/pdf", headers=headers)
+    except HTTPException:
+        raise
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        cursor.close()
+        db.close()
+
+
 # -------- OBTENER TODOS LOS USUARIOS --------
 @app.get("/usuarios")
 def listar_usuarios():
@@ -534,6 +737,36 @@ async def extract_pdf_data(file: UploadFile = File(...)):
             cas = re.search(r'\b\d{2,7}-\d{2}-\d\b', texto)
             cas = cas.group() if cas else "No detectado"
 
+            db = get_connection()
+            cursor = db.cursor()
+            cursor.execute(
+                """
+                INSERT INTO sds_archivos (nombre_archivo, tipo_mime, contenido, datos_extraidos)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (
+                    file.filename or "sds.pdf",
+                    file.content_type or "application/pdf",
+                    contents,
+                    json.dumps(
+                        {
+                            "nombre_producto": nombre,
+                            "indicaciones_peligro": indicaciones,
+                            "consejos_prudencia": consejos,
+                            "informacion_emergencia": emergencia,
+                            "pictogramas": list(set(pictogramas)),
+                            "palabra_advertencia": advertencia,
+                            "cas": cas,
+                        },
+                        ensure_ascii=False,
+                    ),
+                ),
+            )
+            db.commit()
+            id_sds = cursor.lastrowid
+            cursor.close()
+            db.close()
+
             return {
                 "nombre_producto": nombre,
                 "indicaciones_peligro": indicaciones,
@@ -541,7 +774,8 @@ async def extract_pdf_data(file: UploadFile = File(...)):
                 "informacion_emergencia": emergencia,
                 "pictogramas": list(set(pictogramas)),
                 "palabra_advertencia": advertencia,
-                "cas": cas
+                "cas": cas,
+                "id_sds": id_sds,
             }
 
         except Exception as e:
