@@ -33,6 +33,9 @@
         <a href="#etiquetas" class="menu-item">
           <i class="fas fa-search"></i> <span>Etiquetas creadas</span>
         </a>
+        <a href="#sds-guardadas" class="menu-item">
+          <i class="fas fa-file-pdf"></i> <span>SDS guardadas</span>
+        </a>
       </div>
     </div>
     <div class="user-info">
@@ -66,17 +69,17 @@
             <i class="fas fa-tag"></i>
           </div>
           <div class="card-body">
-            <div class="stat-value">1,248</div>
-            <div class="stat-label">+12% este mes</div>
-          </div>
+          <div class="stat-value" id="totalEtiquetas">0</div>
+          <div class="stat-label">+12% este mes</div>
         </div>
+      </div>
         <div class="card stats-card">
           <div class="card-header">
             <h3>SDS Registradas</h3>
             <i class="fas fa-file-alt"></i>
           </div>
           <div class="card-body">
-            <div class="stat-value">568</div>
+            <div class="stat-value" id="totalSds">0</div>
             <div class="stat-label">+8% este mes</div>
           </div>
         </div>
@@ -120,7 +123,6 @@
         <i class="fas fa-tags"></i> Etiquetas creadas
       </h2>
       <div class="table-container">
-        
         <table>
           <thead>
             <tr>
@@ -130,47 +132,26 @@
               <th>Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="tablaEtiquetasBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="sds-guardadas" class="content-section">
+      <h2 class="section-title">
+        <i class="fas fa-file-pdf"></i> SDS guardadas
+      </h2>
+      <div class="table-container">
+        <table>
+          <thead>
             <tr>
-              <td>ETANOL 70%</td>
-              <td>CHEM-ET-70</td>
-              <td>10/06/2023</td>
-              <td>
-                <button class="btn btn-primary btn-sm">
-                  <i class="fas fa-eye"></i> Ver
-                </button>
-                <button class="btn btn-outline btn-sm">
-                  <i class="fas fa-download"></i> Descargar
-                </button>
-              </td>
+              <th>ID</th>
+              <th>Archivo</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
             </tr>
-            <tr>
-              <td>Ácido Clorhídrico</td>
-              <td>CHEM-AC-37</td>
-              <td>09/06/2023</td>
-              <td>
-                <button class="btn btn-primary btn-sm">
-                  <i class="fas fa-eye"></i> Ver
-                </button>
-                <button class="btn btn-outline btn-sm">
-                  <i class="fas fa-download"></i> Descargar
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td>Hipoclorito de Sodio</td>
-              <td>CHEM-HS-15</td>
-              <td>08/06/2023</td>
-              <td>
-                <button class="btn btn-primary btn-sm">
-                  <i class="fas fa-eye"></i> Ver
-                </button>
-                <button class="btn btn-outline btn-sm">
-                  <i class="fas fa-download"></i> Descargar
-                </button>
-              </td>
-            </tr>
-          </tbody>
+          </thead>
+          <tbody id="tablaSdsBody"></tbody>
         </table>
       </div>
     </section>
